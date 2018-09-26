@@ -479,15 +479,25 @@ RUN chown -R $NB_USER:users /opt/conda
 RUN yes | pip install --quiet --no-cache-dir 'jupyterhub'
 
 ## Install VNC
-#RUN apt-get install -y --no-install-recommends xterm xfonts-base x11-xserver-utils supervisor openbox wget bzip2 ca-certificates websockify xinit novnc xfce4
-#
-#RUN pip install nbnovnc
-#
-#RUN jupyter serverextension enable  --py nbserverproxy
-#RUN jupyter serverextension enable  --py nbnovnc
-#RUN jupyter nbextension     install --py nbnovnc
-#RUN jupyter nbextension     enable  --py nbnovnc
-#
+RUN apt-get install -y --no-install-recommends tightvncserver xterm xfonts-base x11-xserver-utils supervisor openbox wget bzip2 ca-certificates xinit novnc xfce4
+
+RUN bash -c 'export PATH=/opt/conda/bin:$PATH ; \
+    source activate py2 ; \
+    pip install websockify'
+
+COPY nbserverproxy/ /nbserverproxy/
+RUN cd /nbserverproxy ; python setup.py install
+
+#RUN yes | pip install --quiet --no-cache-dir 'nbserverproxy'
+RUN yes | pip install --quiet --no-cache-dir 'nbnovnc'
+
+RUN jupyter serverextension enable  --py nbserverproxy
+RUN jupyter serverextension enable  --py nbnovnc
+RUN jupyter nbextension     install --py nbnovnc
+RUN jupyter nbextension     enable  --py nbnovnc
+
+RUN chown -R $NB_USER:users /home/$NB_USER/.jupyter
+
 #RUN git clone https://github.com/ryanlovett/nbnovnc nbnovnc && \
 #    cd nbnovnc && \
 #    python setup.py install && \

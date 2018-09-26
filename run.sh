@@ -7,9 +7,9 @@ export SSL_KEY=${SSL_KEY:-/tmp/secrets/ssl_private.key}
 export SSL_CERT=${SSL_CERT:-/tmp/secrets/ssl_private.crt}
 
 if [ -f /ssl/acme.json ] ; then
-  fqdn="$(jq -r '.DomainsCertificate[] | .[].Certificate.Domain' /ssl/acme.json | grep jupyterhub)"
-  jq -r ".DomainsCertificate[] | .[] | select(.Certificate.Domain==\"$fqdn\") | .Certificate.PrivateKey" /ssl/acme.json | base64 -d > ${SSL_KEY}
-  jq -r ".DomainsCertificate[] | .[] | select(.Certificate.Domain==\"$fqdn\") | .Certificate.Certificate" /ssl/acme.json | base64 -d > ${SSL_CERT}
+  fqdn="$(jq -r '.Certificates[] | .Domain.Main' /ssl/acme.json | grep '*.'${DNS_DOMAIN})"
+  jq -r ".Certificates[] | select(.Domain.Main==\"$fqdn\") | .Key" /ssl/acme.json | base64 -d > ${SSL_KEY}
+  jq -r ".Certificates[] | select(.Domain.Main==\"$fqdn\") | .Certificate" /ssl/acme.json | base64 -d > ${SSL_CERT}
 fi
 
 chmod 600 ${SSL_KEY} ${SSL_CERT}
