@@ -498,6 +498,34 @@ RUN jupyter nbextension     enable  --py nbnovnc
 
 RUN chown -R $NB_USER:users /home/$NB_USER/.jupyter
 
+# Install magma for GPU accelleration of LAPACK
+RUN curl -sL http://icl.utk.edu/projectsfiles/magma/downloads/magma-2.4.0.tar.gz | tar xvzf - \
+ && cd magma-2.4.0 \
+ && mkdir build \
+ && cd build \
+ && cmake .. \
+ && make -j $(nproc) install \
+ && cd .. \
+ && rm -fr magma-2.4.0
+
+# fix linking problems
+RUN echo /opt/conda/lib > /etc/ld.so.conf.d/conda.conf && ldconfig -v
+
+# Install pytorch from source
+RUN conda install numpy pyyaml setuptools cmake cffi typing
+RUN git clone --recursive https://github.com/pytorch/pytorch \
+ && cd pytorch \
+ && python setup.py install \
+ && cd .. \
+ && rm -fr pytorch
+
+# Install torchvision
+RUN git clone https://github.com/pytorch/vision \
+ && cd vision \
+ && python setup.py install  \
+ && cd .. \
+ && rm -fr vision
+
 #RUN git clone https://github.com/ryanlovett/nbnovnc nbnovnc && \
 #    cd nbnovnc && \
 #    python setup.py install && \
