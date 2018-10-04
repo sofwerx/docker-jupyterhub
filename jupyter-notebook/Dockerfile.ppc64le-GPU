@@ -526,6 +526,20 @@ RUN git clone https://github.com/pytorch/vision \
  && cd .. \
  && rm -fr vision
 
+RUN chown -R $NB_USER:users /home/$NB_USER/.cache
+
+# Install flownet2-pytorch
+RUN pip install future \
+ && git clone https://github.com/sofwerx/flownet2-pytorch.git \
+ && cd flownet2-pytorch \
+ && bash install.sh \
+ && cd .. \
+ && rm -fr flownet2-pytorch
+
+RUN chown -R $NB_USER:users /opt/conda /usr/local
+
+RUN apt-get install -y vim nano less
+
 #RUN git clone https://github.com/ryanlovett/nbnovnc nbnovnc && \
 #    cd nbnovnc && \
 #    python setup.py install && \
