@@ -1,0 +1,4 @@
+#!/bin/bash
+rm -f ~/.Xauthority
+mcookie|sed -e "s/^/add $DISPLAY . /"|xauth -q
+exec /usr/bin/startxfce4

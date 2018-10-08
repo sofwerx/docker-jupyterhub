@@ -16,7 +16,8 @@ c.NotebookApp.open_browser = False
 c.FileContentsManager.delete_to_trash = False
 
 c.NBNoVNC.websockify_command = "/opt/conda/envs/py2/bin/websockify --web {novnc_directory} --heartbeat {heartbeat} {port} localhost:{vnc_port}"
-c.NBNoVNC.vnc_command = "xinit -- /usr/bin/Xtightvnc :{display} -geometry {geometry} -depth {depth}"
+c.NBNoVNC.vnc_command = "xinit -- /usr/bin/Xtightvnc :{display} -geometry {geometry} -depth {depth} -auth /home/jovyan/.Xauthority"
+c.NBNoVNC.geometry = "1280x768"
 
 # Generate a self-signed certificate
 if 'GEN_CERT' in os.environ:
