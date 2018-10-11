@@ -511,9 +511,9 @@ RUN pip install future \
 
 RUN apt-get install -y vim nano less adwaita-icon-theme-full 
 
-## This is not necessary
-#COPY supervisord.conf /etc/supervisor/supervisord.conf
-#COPY menu.xml /etc/xdg/openbox/menu.xml
+RUN add-apt-repository -y ppa:mozillateam/ppa \
+ && apt-get update \
+ && apt-get install -y firefox-esr
 
 COPY websocket.py /opt/conda/envs/py2/lib/python2.7/site-packages/websockify/websocket.py
 COPY websock.js /usr/share/novnc/include/websock.js
