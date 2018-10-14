@@ -451,26 +451,6 @@ RUN bash -c 'export PATH=/opt/conda/bin:$PATH ; \
 
 RUN yes | pip install --quiet --no-cache-dir 'jupyterhub'
 
-## Install VNC
-RUN apt-get install -y --no-install-recommends tightvncserver xterm xfonts-base x11-xserver-utils supervisor openbox wget bzip2 ca-certificates xinit novnc xfce4
-
-RUN bash -c 'export PATH=/opt/conda/bin:$PATH ; \
-    source activate py2 ; \
-    pip install websockify'
-
-COPY nbserverproxy/ /nbserverproxy/
-RUN cd /nbserverproxy ; python setup.py install
-
-#RUN yes | pip install --quiet --no-cache-dir 'nbserverproxy'
-RUN yes | pip install --quiet --no-cache-dir 'nbnovnc'
-
-RUN jupyter serverextension enable  --py nbserverproxy
-RUN jupyter serverextension enable  --py nbnovnc
-RUN jupyter nbextension     install --py nbnovnc
-RUN jupyter nbextension     enable  --py nbnovnc
-
-RUN chown -R $NB_USER:users /home/$NB_USER/.jupyter
-
 # Install magma for GPU accelleration of LAPACK
 RUN curl -sL http://icl.utk.edu/projectsfiles/magma/downloads/magma-2.4.0.tar.gz | tar xvzf - \
  && cd magma-2.4.0 \
@@ -514,6 +494,45 @@ RUN apt-get install -y vim nano less adwaita-icon-theme-full
 RUN add-apt-repository -y ppa:mozillateam/ppa \
  && apt-get update \
  && apt-get install -y firefox-esr
+
+## Install VNC
+RUN apt-get install -y --no-install-recommends tightvncserver xterm xfonts-base x11-xserver-utils supervisor openbox wget bzip2 ca-certificates xinit novnc xfce4
+
+RUN bash -c 'export PATH=/opt/conda/bin:$PATH ; \
+    source activate py2 ; \
+    pip install websockify'
+
+COPY nbserverproxy/ /nbserverproxy/
+RUN cd /nbserverproxy ; python setup.py install
+
+#RUN yes | pip install --quiet --no-cache-dir 'nbserverproxy'
+RUN yes | pip install --quiet --no-cache-dir 'nbnovnc'
+#RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libzmq3-dev
+#RUN chown -R $NB_USER:users /opt/conda /usr/local
+#USER $NB_UID
+#RUN curl -sL https://files.pythonhosted.org/packages/67/84/ce0ebd0f60e1cbe040f8e065eef7063855d59d9cf5e6438b3f8439fc7e15/terminado-0.8.1.tar.gz | tar xvzf - \
+# && cd terminado-0.8.1 \
+# && pip3.6 install ipython \
+# && pip3.6 install jupyter_client \
+# && pip3.6 install jsonschema \
+# && python3.6 setup.py install \
+# && cd .. \
+# && rm -fr terminado-0.8.1
+#USER root
+RUN git clone https://github.com/ianblenke/nbnovnc \
+ && cp -f nbnovnc/nbnovnc/handlers.py /opt/conda/lib/python3.6/site-packages/nbnovnc/handlers.py \
+ && rm -fr nbnovnc
+
+RUN jupyter serverextension enable  --py nbserverproxy
+RUN jupyter serverextension enable  --py nbnovnc
+RUN jupyter nbextension     install --py nbnovnc
+RUN jupyter nbextension     enable  --py nbnovnc
+
+RUN chown -R $NB_USER:users /home/$NB_USER/.jupyter
+
+# Get GLX working, for whatever good that is worth over VNC
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libgl1-mesa-dri xserver-xorg-video-dummy xserver-xorg-input-void mesa-utils x11vnc net-tools
+ADD xorg.conf /etc/X11/xorg.conf
 
 COPY websocket.py /opt/conda/envs/py2/lib/python2.7/site-packages/websockify/websocket.py
 COPY websock.js /usr/share/novnc/include/websock.js
