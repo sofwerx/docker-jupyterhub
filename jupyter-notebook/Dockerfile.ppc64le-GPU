@@ -496,7 +496,58 @@ RUN add-apt-repository -y ppa:mozillateam/ppa \
  && apt-get install -y firefox-esr
 
 ## Install VNC
-RUN apt-get install -y --no-install-recommends tightvncserver xterm xfonts-base x11-xserver-utils supervisor openbox wget bzip2 ca-certificates xinit novnc xfce4
+RUN apt-get install -y --no-install-recommends tightvncserver xterm xfonts-base x11-xserver-utils supervisor openbox wget bzip2 ca-certificates xinit novnc xfce4 libpam0g-dev
+
+
+RUN git clone -b 2.0.0 https://github.com/libjpeg-turbo/libjpeg-turbo \
+ && cd libjpeg-turbo \
+ && mkdir build \
+ && cd build \
+ && cmake -G"Unix Makefiles" -DWITH_JAVA=1 CMAKE_INSTALL_JAVADIR=/opt/libjpeg-turbo-jni .. \
+ && make \
+ && make install \
+ && cd ../.. \
+ && rm -fr libjpeg-turbo
+
+RUN mkdir -p /opt/libjpeg-turbo-jni/ ; \
+    cp -a  /opt/libjpeg-turbo/classes/turbojpeg.jar /opt/libjpeg-turbo-jni/ljtlinux32.jar ; \
+    cp -a  /opt/libjpeg-turbo/classes/turbojpeg.jar /opt/libjpeg-turbo-jni/ljtlinux64.jar ; \
+    cp -a  /opt/libjpeg-turbo/classes/turbojpeg.jar /opt/libjpeg-turbo-jni/ljtosx.jar ; \
+    cp -a  /opt/libjpeg-turbo/classes/turbojpeg.jar /opt/libjpeg-turbo-jni/ljtwin32.jar ; \
+    cp -a  /opt/libjpeg-turbo/classes/turbojpeg.jar /opt/libjpeg-turbo-jni/ljtwin64.jar
+ 
+RUN apt-get install -y libxv-dev libxtst-dev libglu1-mesa-dev
+RUN curl -sL https://downloads.sourceforge.net/project/virtualgl/2.6/VirtualGL-2.6.tar.gz | tar xvzf - \
+ && cd VirtualGL-2.6 \
+ && mkdir build \
+ && cd build \
+ && cmake -G"Unix Makefiles" .. \
+ && make -j $(nproc) \
+ && make install \
+ && cd ../.. \
+ && rm -fr VirtualGL-2.6
+
+ENV PATH=${PATH}:/opt/VirtualGL/bin
+
+RUN find / -name 'ljt*jar' -print
+RUN git clone -b 2.2 https://github.com/TurboVNC/turbovnc \
+ && cd turbovnc \
+ && mkdir build \
+ && cd build \
+ && cmake -G"Unix Makefiles" \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_JAVA_COMPILE_FLAGS='-target 1.6 -source 1.6 -Xlint:all,-serial,-cast,-unchecked,-rawtypes' \
+	  -DTVNC_BUILDJAVA=1 \
+          -DTVNC_INCLUDEJNIJARS=1 \
+	  -DTVNC_BUILDNATIVE=1 \
+	  -DTVNC_BUILDSERVER=1 \
+          .. \
+ && make \
+ && make install \
+ && cd ../.. \
+ && rm -fr turbovnc
+
+ENV PATH=${PATH}:/opt/TurboVNC/bin
 
 RUN bash -c 'export PATH=/opt/conda/bin:$PATH ; \
     source activate py2 ; \
