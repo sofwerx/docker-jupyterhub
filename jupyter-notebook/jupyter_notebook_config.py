@@ -22,6 +22,10 @@ c.NBNoVNC.websockify_command = "/opt/conda/envs/py2/bin/websockify --web {novnc_
 
 c.NBNoVNC.geometry = "1280x768"
 
+# Set the iopub data rate limit to 60MB/s
+c.NotebookApp.iopub_data_rate_limit=60000000
+c.NotebookApp.rate_limit_window=1.0
+
 # Generate a self-signed certificate
 if 'GEN_CERT' in os.environ:
     dir_name = jupyter_data_dir()
@@ -44,3 +48,5 @@ if 'GEN_CERT' in os.environ:
     # Restrict access to the file
     os.chmod(pem_file, stat.S_IRUSR | stat.S_IWUSR)
     c.NotebookApp.certfile = pem_file
+
+
