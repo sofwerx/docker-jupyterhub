@@ -599,6 +599,7 @@ COPY xinitrc /home/$NB_USER/.xinitrc
 RUN chown -R $NB_USER:users /opt/conda /usr/local /home/$NB_USER/.jupyter
 RUN chown -R $NB_USER:users /home/jovyan/.local
 
+RUN ldconfig -v
 # Switch back to jovyan to avoid accidental container runs as root
 
 USER $NB_UID
