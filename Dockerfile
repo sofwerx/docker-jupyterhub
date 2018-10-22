@@ -12,7 +12,7 @@ RUN apt-get -y update && \
     rm -rf /var/lib/apt/lists/*
 
 RUN curl -sL https://deb.nodesource.com/setup_10.x | bash -
-RUN apt-get install -y nodejs npm
+RUN apt-get install -y nodejs
 RUN npm install -g configurable-http-proxy
 
 ENV LANG=C.UTF-8 \
