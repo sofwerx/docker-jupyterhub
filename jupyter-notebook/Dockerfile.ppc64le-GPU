@@ -491,9 +491,59 @@ RUN pip install future \
 
 RUN apt-get install -y vim nano less adwaita-icon-theme-full 
 
-RUN add-apt-repository -y ppa:mozillateam/ppa \
- && apt-get update \
- && apt-get install -y firefox-esr
+#RUN add-apt-repository -y ppa:mozillateam/ppa \
+# && apt-get update \
+# && apt-get install -y firefox-esr
+
+RUN chown -R root /home/jovyan/.cache
+RUN bash -c 'export PATH=/opt/conda/bin:$PATH && \
+    source activate py2 && \
+    git clone https://github.com/tensorflow/tensorflow && \
+    cd tensorflow && \
+    git checkout v1.10.0 && \
+    ln -s $(which pip) /usr/local/bin/pip2 && \
+    pip install --upgrade pip && \
+    ./tensorflow/tools/ci_build/install/install_bootstrap_deb_packages.sh && \
+    easy_install -U pip==9.0.3 && \
+    pip2 install wheel==0.31.1 && \
+    pip2 install --upgrade setuptools==39.1.0 && \
+    pip2 install virtualenv && \
+    pip2 install --upgrade six==1.10.0 && \
+    pip2 install --upgrade absl-py && \
+    pip2 install --upgrade werkzeug==0.11.10 && \
+    pip2 install --upgrade bleach==2.0.0 && \
+    pip2 install --upgrade markdown==2.6.8 && \
+    pip2 install --upgrade protobuf==3.6.0 && \
+    rm -rf /usr/lib/python3/dist-packages/six* && \
+    pip2 install scikit-learn==0.18.1 && \
+    pip2 install pandas==0.19.2 && \
+    pip2 install psutil && \
+    pip2 install py-cpuinfo && \
+    pip2 install pylint==1.6.4 && \
+    pip2 install pep8 && \
+    pip2 install mock && \
+    pip2 install portpicker && \
+    pip2 install grpcio && \
+    pip2 install --upgrade astor && \
+    pip2 install --upgrade gast && \
+    pip2 install --upgrade termcolor && \
+    pip2 install keras_applications==1.0.6 --no-deps && \
+    pip2 install keras_preprocessing==1.0.5 --no-deps && \
+    pip2 install --upgrade h5py==2.8.0 && \
+    pip2 install tensorflow_estimator --no-deps && \
+    ./tensorflow/tools/ci_build/install/install_golang_ppc64le.sh && \
+    ./tensorflow/tools/ci_build/builds/configured GPU && \
+    echo /usr/local/cuda-9.0/targets/ppc64le-linux/lib/stubs > /etc/ld.so.conf.d/cuda-9.0.conf && ldconfig && \
+    bazel build -j `nproc` --ram_utilization_factor 50 -c opt --config=cuda //tensorflow/tools/pip_package:build_pip_package && \
+    ./bazel-bin/tensorflow/tools/pip_package/build_pip_package /tmp'
+RUN pip install /tmp/tensorflow-*.whl
+# && \
+#    rm -f /tmp/tensorflow-1.10.0-cp27-cp27m-linux_ppc64le.whl && \
+RUN rm -f /etc/ld.so.conf.d/cuda-9.0.conf && ldconfig && \
+    echo /usr/local/nvidia/lib64 > /etc/ld.so.conf.d/nvidia-lib64.conf && ldconfig
+# && \
+#    cd .. && \
+#    rm -fr tensorflow'
 
 ## Install VNC
 RUN apt-get install -y --no-install-recommends tightvncserver xterm xfonts-base x11-xserver-utils supervisor openbox wget bzip2 ca-certificates xinit novnc xfce4 libpam0g-dev
@@ -541,6 +591,7 @@ RUN git clone -b 2.2 https://github.com/TurboVNC/turbovnc \
           -DTVNC_INCLUDEJNIJARS=1 \
 	  -DTVNC_BUILDNATIVE=1 \
 	  -DTVNC_BUILDSERVER=1 \
+	  -DTVNC_GLX=1 \
           .. \
  && make \
  && make install \
@@ -582,6 +633,7 @@ RUN jupyter nbextension     enable  --py nbnovnc
 RUN chown -R $NB_USER:users /home/$NB_USER/.jupyter
 
 # Get GLX working, for whatever good that is worth over VNC
+RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libgl1-mesa-dri xserver-xorg-video-dummy xserver-xorg-input-void mesa-utils x11vnc net-tools
 ADD xorg.conf /etc/X11/xorg.conf
 
@@ -596,15 +648,16 @@ COPY jupyter_notebook_config.py /home/$NB_USER/.jupyter/
 
 COPY xinitrc /home/$NB_USER/.xinitrc
 
-RUN chown -R $NB_USER:users /opt/conda /usr/local /home/$NB_USER/.jupyter
-RUN chown -R $NB_USER:users /home/jovyan/.local
+RUN chown -R $NB_USER:users /opt/conda /usr/local /home/$NB_USER
 
 RUN ldconfig -v
 # Switch back to jovyan to avoid accidental container runs as root
 
 USER $NB_UID
+ADD theanorc /home/$NB_USER/.theanorc
 
 # Configure container startup
 ENTRYPOINT ["tini", "-g", "--"]
 CMD ["start-notebook.sh"]
+
 
