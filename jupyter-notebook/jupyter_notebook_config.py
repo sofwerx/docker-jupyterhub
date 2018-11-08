@@ -25,6 +25,7 @@ c.NBNoVNC.geometry = "1280x768"
 # Set the iopub data rate limit to 60MB/s
 c.NotebookApp.iopub_data_rate_limit=60000000000
 c.NotebookApp.rate_limit_window=1.0
+c.NotebookApp.limit_output=60000000000
 
 # Generate a self-signed certificate
 if 'GEN_CERT' in os.environ:
