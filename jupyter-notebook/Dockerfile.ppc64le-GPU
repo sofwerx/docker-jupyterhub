@@ -535,17 +535,16 @@ RUN bash -c 'export PATH=/opt/conda/bin:$PATH && \
     ./tensorflow/tools/ci_build/builds/configured GPU && \
     echo /usr/local/cuda-9.0/targets/ppc64le-linux/lib/stubs > /etc/ld.so.conf.d/cuda-9.0.conf && ldconfig && \
     bazel build -j `nproc` --ram_utilization_factor 50 -c opt --config=cuda //tensorflow/tools/pip_package:build_pip_package && \
-    ./bazel-bin/tensorflow/tools/pip_package/build_pip_package /tmp'
-RUN pip install /tmp/tensorflow-*.whl
-# && \
-#    rm -f /tmp/tensorflow-1.10.0-cp27-cp27m-linux_ppc64le.whl && \
-RUN rm -f /etc/ld.so.conf.d/cuda-9.0.conf && ldconfig && \
-    echo /usr/local/nvidia/lib64 > /etc/ld.so.conf.d/nvidia-lib64.conf && ldconfig
-# && \
-#    cd .. && \
-#    rm -fr tensorflow'
+    ./bazel-bin/tensorflow/tools/pip_package/build_pip_package /tmp && \
+    pip2 install /tmp/tensorflow-1.10.0-cp27-cp27mu-linux_ppc64le.whl && \
+    rm -f /tmp/tensorflow-1.10.0-cp27-cp27mu-linux_ppc64le.whl && \
+    rm -f /etc/ld.so.conf.d/cuda-9.0.conf && ldconfig && \
+    echo /usr/local/nvidia/lib64 > /etc/ld.so.conf.d/nvidia-lib64.conf && ldconfig && \
+    cd .. && \
+    rm -fr tensorflow'
 
 ## Install VNC
+RUN apt-get update
 RUN apt-get install -y --no-install-recommends tightvncserver xterm xfonts-base x11-xserver-utils supervisor openbox wget bzip2 ca-certificates xinit novnc xfce4 libpam0g-dev
 
 
@@ -629,6 +628,28 @@ RUN jupyter serverextension enable  --py nbserverproxy
 RUN jupyter serverextension enable  --py nbnovnc
 RUN jupyter nbextension     install --py nbnovnc
 RUN jupyter nbextension     enable  --py nbnovnc
+
+RUN yes | conda update --all
+
+RUN apt-get update \
+ && apt-get install -y libgfortran-4.9-dev \
+ && conda install libgfortran
+
+## Work through the _gfortran_stop_numeric_f08 error by moving off the broken anaconda libopenblas library
+#ENV LD_LIBRARY_PATH=/usr/lib/powerpc64le-linux-gnu/:/usr/lib/:/usr/lib/gcc/powerpc64le-linux-gnu/4.9:/usr/lib/powerpc64le-linux-gnu
+RUN mkdir -p /opt/conda/tmp; mv /opt/conda/lib/libopenblas* /opt/conda/tmp
+#RUN mkdir -p /opt/conda/tmp; mv /opt/conda/lib/libgfortran.so.3* /opt/conda/tmp
+#RUN sudo ln -s /usr/lib/gcc/powerpc64le-linux-gnu/4.9/libgfortran.so /usr/lib/gcc/powerpc64le-linux-gnu/4.9/libgfortran.so.4
+# && mv /opt/conda/lib/libgfortran.so.4 /opt/conda/lib/libgfortran.so.4.orig \
+# && ln -s /usr/lib/gcc/powerpc64le-linux-gnu/4.9/libgfortran.so /opt/conda/lib/libgfortran.so.4 \
+# && mv /opt/conda/lib/libgcc_s.so.1 /opt/conda/lib/libgcc_s.so.1.orig \
+# && ln -s /usr/lib/gcc/powerpc64le-linux-gnu/4.9/libgcc_s.so.1 /opt/conda/lib/libgcc_s.so.1 \
+# && mv /opt/conda/lib/libopenblas.so.0 /opt/conda/lib/libopenblas.so.0.orig \
+# && ln -s /usr/lib/libopenblas.so.0 /opt/conda/lib/libopenblas.so.0 \
+# && mv /opt/conda/lib/libopenblas_power8p-r0.2.20.so /opt/conda/lib/libopenblas_power8p-r0.2.20.so.orig \
+# && ln -s /usr/lib/libopenblas_power8p-r0.2.18.so /opt/conda/lib/libopenblas_power8p-r0.2.20.so \
+# && mv /opt/conda/lib/libgfortran.so.3 /opt/conda/lib/libgfortran.so.3.orig \
+# && ln -s /usr/lib/powerpc64le-linux-gnu/libgfortran.so.3 /opt/conda/lib/libgfortran.so.3
 
 RUN chown -R $NB_USER:users /home/$NB_USER/.jupyter
 
