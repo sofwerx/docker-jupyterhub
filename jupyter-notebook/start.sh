@@ -2,7 +2,8 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-set -e
+set -xe
+sudo ldconfig -v
 
 # Exec the specified command or fall back on bash
 if [ $# -eq 0 ]; then

@@ -651,6 +651,8 @@ RUN mkdir -p /opt/conda/tmp; mv /opt/conda/lib/libopenblas* /opt/conda/tmp
 # && mv /opt/conda/lib/libgfortran.so.3 /opt/conda/lib/libgfortran.so.3.orig \
 # && ln -s /usr/lib/powerpc64le-linux-gnu/libgfortran.so.3 /opt/conda/lib/libgfortran.so.3
 
+RUN pip install -U protobuf
+
 RUN chown -R $NB_USER:users /home/$NB_USER/.jupyter
 
 # Get GLX working, for whatever good that is worth over VNC
@@ -661,6 +663,8 @@ ADD xorg.conf /etc/X11/xorg.conf
 COPY websocket.py /opt/conda/envs/py2/lib/python2.7/site-packages/websockify/websocket.py
 COPY websock.js /usr/share/novnc/include/websock.js
 
+RUN chown -R $NB_USER:users /opt/conda /usr/local /home/$NB_USER
+
 # Add local files as late as possible to avoid cache busting
 COPY start.sh /usr/local/bin/
 COPY start-notebook.sh /usr/local/bin/
@@ -669,9 +673,9 @@ COPY jupyter_notebook_config.py /home/$NB_USER/.jupyter/
 
 COPY xinitrc /home/$NB_USER/.xinitrc
 
-RUN chown -R $NB_USER:users /opt/conda /usr/local /home/$NB_USER
-
+RUN echo '/usr/local/nvidia/lib64/' > /etc/ld.so.conf.d/nvidia.conf
 RUN ldconfig -v
+RUN find / -name \*.pyc -delete
 # Switch back to jovyan to avoid accidental container runs as root
 
 USER $NB_UID
