@@ -8,6 +8,11 @@ import errno
 import stat
 
 c = get_config()
+startup = [
+   'from metakernel import register_ipython_magics',
+   'register_ipython_magics()',
+]
+c.InteractiveShellApp.exec_lines = startup
 c.NotebookApp.ip = '*'
 c.NotebookApp.port = 8888
 c.NotebookApp.open_browser = False
